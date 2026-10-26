@@ -1,0 +1,30 @@
+{% extends 'loja/base.twig' %}
+{% import 'loja/macros.twig' as ui %}
+{% block title %}Como podemos ajudar?{% endblock %}
+{% block content %}
+<main id="conteudo" class="wrap help-page">
+    <a class="back-link" href="/colecao">{{ ui.icon('arrow') }} Voltar para a coleção</a>
+    <div class="help-heading"><h1>Escolha com<br>mais tranquilidade.</h1><p>Um lugar para conferir medidas, entender o frete e saber como funciona a sua compra.</p></div>
+    <div class="help-layout">
+        <nav class="help-nav" aria-label="Assuntos de ajuda"><a href="#pecas">Peças e medidas</a><a href="#entrega">Frete e entrega</a><a href="#pedido">Sacola e pedido</a><a href="#atendimento">Trocas e atendimento</a></nav>
+        <div class="help-content">
+            <section id="pecas" aria-labelledby="help-pieces"><h2 id="help-pieces">Peças e medidas</h2>
+                <details class="help-question" open><summary>Como escolher meu tamanho? {{ ui.icon('plus') }}</summary><div><p>Abra a peça, escolha a cor e consulte o Guia de medidas antes de selecionar o tamanho. Compare a largura e o comprimento com uma peça sua, sem esticar o tecido.</p><p>O guia atual usa medidas ilustrativas para os produtos de demonstração.</p></div></details>
+                <details class="help-question"><summary>As fotos mostram todas as cores? {{ ui.icon('plus') }}</summary><div><p>Nas peças de demonstração, a foto acompanha a cor escolhida e a galeria mostra outros ângulos. As imagens são ilustrativas e representam o conceito da coleção.</p><p>Confira sempre o nome da cor e o tamanho antes de adicionar à sacola.</p></div></details>
+            </section>
+            <section id="entrega" aria-labelledby="help-delivery"><h2 id="help-delivery">Frete e entrega</h2>
+                <details class="help-question" open><summary>Quanto custa o frete? {{ ui.icon('plus') }}</summary><div><p>O valor aparece na sacola e na revisão, antes de confirmar. Ele é calculado sobre o subtotal das peças, antes do desconto do cupom.</p><div class="help-table"><table><caption>Frete por subtotal das peças</caption><thead><tr><th>Subtotal</th><th>Frete</th></tr></thead><tbody><tr><td>Até R$ 51,99</td><td>R$ 20,00</td></tr><tr><td>R$ 52,00 a R$ 166,59</td><td>R$ 15,00</td></tr><tr><td>R$ 166,60 a R$ 200,00</td><td>R$ 20,00</td></tr><tr><td>Acima de R$ 200,00</td><td>Grátis</td></tr></tbody></table></div></div></details>
+                <details class="help-question"><summary>Preciso consultar o CEP? {{ ui.icon('plus') }}</summary><div><p>Você pode consultar o CEP para preencher parte do endereço ou digitar tudo manualmente. Confira rua, número, cidade e estado antes de confirmar.</p></div></details>
+                <details class="help-question"><summary>Quando meu pedido será entregue? {{ ui.icon('plus') }}</summary><div><p>{% if demo %}Este ambiente é uma demonstração. Os pedidos registrados não geram envio nem entrega de produtos.{% else %}O prazo de entrega não está disponível nesta loja. O registro do pedido, por si só, não confirma pagamento ou envio.{% endif %}</p></div></details>
+            </section>
+            <section id="pedido" aria-labelledby="help-order"><h2 id="help-order">Sacola e pedido</h2>
+                <details class="help-question"><summary>Como usar um cupom? {{ ui.icon('plus') }}</summary><div><p>Na revisão do pedido, digite o código e toque em Aplicar. Quando o cupom for válido para a sua sacola, o desconto aparecerá no resumo e no total.</p><p>Se alterar a quantidade de peças, confira novamente o desconto: cupons podem exigir um valor mínimo de compra.</p></div></details>
+                <details class="help-question"><summary>Confirmar pedido faz alguma cobrança? {{ ui.icon('plus') }}</summary><div><p>{% if demo %}Não. Você pode experimentar o fluxo de compra e registrar um pedido de demonstração sem cobrança ou entrega.{% else %}Não. Esta loja registra o pedido, mas ainda não oferece pagamento. A confirmação indica apenas que o pedido foi registrado.{% endif %}</p></div></details>
+                <details class="help-question"><summary>Onde ficam minhas peças favoritas? {{ ui.icon('plus') }}</summary><div><p>Toque no coração da peça para salvá-la. O coração no cabeçalho abre suas favoritas. Elas ficam salvas neste navegador; em outro dispositivo, a lista pode ser diferente.</p></div></details>
+            </section>
+            <section id="atendimento" aria-labelledby="help-support"><h2 id="help-support">Trocas e atendimento</h2><div class="help-note"><p>{% if demo %}Como esta é uma loja de demonstração, não há vendas, entregas ou trocas de produtos reais.{% else %}As condições de troca e os canais de atendimento comercial ainda não foram informados nesta loja.{% endif %}</p><p>O contato comercial e as condições de troca serão apresentados quando a loja tiver uma operação real.</p></div></section>
+            <a class="button button-blue" href="/colecao">Voltar para a coleção {{ ui.icon('arrow') }}</a>
+        </div>
+    </div>
+</main>
+{% endblock %}

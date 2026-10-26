@@ -1,0 +1,175 @@
+{% import 'loja/macros.twig' as ui %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Vista suas próprias ideias{% endblock %} | Nuvix</title>
+    <meta name="description" content="Camisetas, moletons e acessórios autorais. Encontre a peça que combina com o seu jeito na Nuvix.">
+    <meta name="theme-color" content="#294cc8">
+    <link rel="icon" href="/assets/images/marca.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/assets/loja.css">
+    <script src="/js/loja/loja.js" defer>
+</script>
+</head>
+<body>
+<a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
+<svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<defs>
+    <symbol id="i-bag" viewBox="0 0 24 24">
+<path d="M5 7h14l1 14H4L5 7Z"/>
+<path d="M8 8V6a4 4 0 0 1 8 0v2"/>
+</symbol>
+    <symbol id="i-search" viewBox="0 0 24 24">
+<circle cx="10.5" cy="10.5" r="6.5"/>
+<path d="m16 16 5 5"/>
+</symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24">
+<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>
+</symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24">
+<path d="M4 12h16m-6-6 6 6-6 6"/>
+</symbol>
+    <symbol id="i-up-right" viewBox="0 0 24 24">
+<path d="M6 18 18 6M6 6h12v12"/>
+</symbol>
+    <symbol id="i-close" viewBox="0 0 24 24">
+<path d="m6 6 12 12M6 18 18 6"/>
+</symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24">
+<path d="M5 12h14M12 5v14"/>
+</symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24">
+<path d="M5 12h14"/>
+</symbol>
+    <symbol id="i-truck" viewBox="0 0 24 24">
+<path d="M1 4h13v13H1V4Zm13 4h4l4 5v4h-8"/>
+<circle cx="5" cy="18" r="2"/>
+<circle cx="18" cy="18" r="2"/>
+</symbol>
+    <symbol id="i-check" viewBox="0 0 24 24">
+<path d="m5 12 4 4L19 6"/>
+</symbol>
+    <symbol id="i-shirt" viewBox="0 0 24 24">
+<path d="m8 3-6 4 3 5 3-2v11h8V10l3 2 3-5-6-4a4 4 0 0 1-8 0Z"/>
+</symbol>
+    <symbol id="i-flower" viewBox="0 0 24 24">
+<path d="M12 3v18M3 12h18M5.5 5.5l13 13M5.5 18.5l13-13"/>
+</symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24">
+<path d="M4 6h16M4 12h16M4 18h16"/>
+</symbol>
+    <symbol id="i-zoom" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5M7.5 10.5h6m-3-3v6"/></symbol>
+</defs>
+</svg>
+<div class="announcement">Um motivo a mais para escolher sua próxima peça: frete grátis acima de R$ 200.</div>
+<header class="site-header wrap">
+    <a class="wordmark" href="/" aria-label="Nuvix, início">nuvix<svg class="brand-flower" aria-hidden="true" viewBox="0 0 24 24">
+<use href="#i-flower"/>
+</svg>
+</a>
+    <nav class="main-nav" aria-label="Navegação principal">
+<a href="/colecao" {% if colecao %}aria-current="page"{% endif %}>Coleção</a>
+<a href="/#nossa-ideia">Nossa ideia</a>
+</nav>
+    <div class="header-actions">
+<button class="icon-button" data-open-search aria-label="Buscar peças">{{ ui.icon('search') }}</button>
+<button class="icon-button favorites-nav" data-show-favorites aria-label="Ver favoritos">{{ ui.icon('heart') }}<span class="favorites-count" data-favorites-count aria-hidden="true" hidden>0</span></button>
+<button class="bag-button" data-open-cart aria-label="Abrir sacola">{{ ui.icon('bag') }}<span class="bag-label">Sacola</span>
+<span class="bag-count" data-cart-count>0</span>
+</button>
+</div>
+</header>
+{% block content %}{% endblock %}
+<footer class="site-footer">
+<div class="wrap footer-top">
+<div>
+<a class="wordmark" href="/">nuvix<svg class="brand-flower" aria-hidden="true" viewBox="0 0 24 24">
+<use href="#i-flower"/>
+</svg>
+</a>
+<p>Mais espaço para o seu jeito.</p>
+</div>
+<div class="footer-links"><nav aria-label="Explorar a loja"><h2>Explore</h2>
+<a href="/colecao">Explorar coleção</a>
+<a href="/#nossa-ideia">Nossa ideia</a>
+<a href="/carrinho">Minha sacola</a>
+</nav><nav aria-label="Ajuda para comprar"><h2>Podemos ajudar</h2><a href="/ajuda">Dúvidas sobre a compra</a><a href="/ajuda#entrega">Frete e entrega</a><a href="/ajuda#atendimento">Trocas e atendimento</a></nav></div>
+</div>
+<div class="wrap footer-bottom">
+<span>© {{ 'now'|date('Y') }} Nuvix. Feito para vestir ideias.</span>
+<span>Loja de demonstração · Imagens ilustrativas</span>
+<a href="/produtos">Área de gestão</a>
+</div>
+</footer>
+<dialog id="search-dialog" class="search-dialog" aria-labelledby="search-title">
+<div class="dialog-heading">
+<h2 id="search-title">O que você procura?</h2>
+<button class="icon-button" data-close-dialog aria-label="Fechar busca">{{ ui.icon('close') }}</button>
+</div>
+<form action="/colecao" method="GET">
+<label class="sr-only" for="search-input">Buscar peças</label>
+<div class="search-field">
+<input id="search-input" type="search" name="busca" placeholder="Camiseta, moletom, uma nova ideia…" autofocus>
+<button class="icon-button" aria-label="Pesquisar">{{ ui.icon('search') }}</button>
+</div>
+</form>
+<p>Uma peça nova pode ser um bom começo.</p>
+</dialog>
+<dialog id="cart-dialog" class="cart-dialog" aria-labelledby="cart-title">
+<div class="dialog-heading">
+<h2 id="cart-title">Sua sacola <span data-cart-count>0</span>
+</h2>
+<button class="icon-button" data-close-dialog aria-label="Fechar sacola">{{ ui.icon('close') }}</button>
+</div>
+<div class="drawer-content" data-cart-items>
+</div>
+<div class="drawer-bottom" data-cart-summary>
+</div>
+<p class="form-feedback" data-cart-feedback role="status">
+</p>
+</dialog>
+<dialog id="size-dialog" class="size-dialog" aria-labelledby="size-title">
+<div class="dialog-heading">
+<h2 id="size-title">Guia de medidas</h2>
+<button class="icon-button" data-close-dialog aria-label="Fechar guia de medidas">{{ ui.icon('close') }}</button>
+</div>
+<p>Referência ilustrativa para as peças de demonstração. Compare com uma peça sua, sem esticar o tecido.</p>
+<table>
+<caption>Medidas aproximadas da peça em centímetros</caption>
+<thead>
+<tr>
+<th>Tamanho</th>
+<th>Largura</th>
+<th>Comprimento</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>P</th>
+<td>50</td>
+<td>68</td>
+</tr>
+<tr>
+<th>M</th>
+<td>53</td>
+<td>71</td>
+</tr>
+<tr>
+<th>G</th>
+<td>56</td>
+<td>74</td>
+</tr>
+<tr>
+<th>GG</th>
+<td>59</td>
+<td>77</td>
+</tr>
+</tbody>
+</table>
+</dialog>
+<div class="toast" role="status" aria-live="polite" data-toast hidden>
+</div>
+{% block data %}{% endblock %}
+</body>
+</html>

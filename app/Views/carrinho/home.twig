@@ -1,113 +1,54 @@
-{% extends "base.twig" %}
-
-{% block title %}Carrinho
-{% endblock %}
-
-{% block link %}
-	<link rel="stylesheet" href="/assets/styles.css">
-{% endblock %}
-
+{% extends 'loja/base.twig' %}
+{% import 'loja/macros.twig' as ui %}
+{% block title %}Sua sacola{% endblock %}
 {% block content %}
-	<nav>
-		<a href="/">Início</a>
-		<a href="/produtos">Produtos</a>
-		<a href="/cupons">Cupons</a>
-		<a href="/pedidos">Pedidos</a>
-	</nav>
-
-	<main class="dashboard">
-		<h1>Bem-vindo ao seu carrinho!</h1>
-		<p>Aqui você poderá gerenciar seu pedido e fechar a compra.</p>
-
-		{% if erro %}
-			<div class="error-message">{{ erro }}</div>
-		{% endif %}
-
-		<div class="card-container">
-			<div class="row">
-				{% for itemPedido in pedido.itensPedido %}
-					<div class="col-md-6 mb-4">
-						<div class="card border-secondary">
-							<div class="card-header bg-secondary text-white">
-								Item #{{ itemPedido.idItem }}
-							</div>
-							<div class="card-body">
-								<p>
-									<strong>Referência:</strong>
-									{{ itemPedido.referencia }}</p>
-								<p>
-									<strong>Cor:</strong>
-									{{ itemPedido.cor }}</p>
-								<p>
-									<strong>Tamanho:</strong>
-									{{ itemPedido.tamanho }}</p>
-								<p>
-									<strong>Quantidade:</strong>
-									{{ itemPedido.quantidade }}</p>
-								<p>
-									<strong>Preço Unitário:</strong>
-									R$
-									{{ itemPedido.preco|number_format(2, ",", ".") }}</p>
-								<p>
-									<strong>Total:</strong>
-									R$
-									{{ (itemPedido.preco * itemPedido.quantidade)|number_format(2, ",", ".") }}</p>
-							</div>
-						</div>
-					</div>
-				{% else %}
-					<p>Nenhum item adicionado ao carrinho.</p>
-				{% endfor %}
-			</div>
-
-			{% if pedido is defined and pedido.itensPedido is defined and pedido.itensPedido|length > 0 %}
-				<div class="d-flex justify-content-end mt-4">
-					<button class="btn btn-primary btn-finalizar-carrinho">Finalizar Compra</button>
-				</div>
-			{% endif %}
-		</div>
-	</main>
-
-	<!-- Modal de Finalização -->
-	<div class="modal fade" id="modal-finalizar-compra" tabindex="-1" aria-labelledby="modalFinalizarLabel" aria-hidden="true">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<form class="form-finalizar">
-					<div class="modal-header">
-						<h5 class="modal-title" id="modalFinalizarLabel">Finalizar Pedido</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-					</div>
-					<div class="modal-body">
-						<label class="form-label">Informe seu CEP</label>
-						<input type="text" name="cep" class="form-control" placeholder="Ex: 01001-000" required>
-
-						<label class="form-label mt-3">Email</label>
-						<input type="email" name="email" class="form-control" placeholder="seu@email.com" required>
-
-						<label class="form-label mt-3">Cupom</label>
-						<select name="cupom" class="form-select cupom-select">
-							<option value="">-- Selecione um cupom --</option>
-							{% for c in cupons %}
-								<option value="{{ c.id }}" data-desconto="{{ c.valorDesconto }}">
-									{{ c.referencia }}
-								</option>
-							{% endfor %}
-						</select>
-
-						<div id="desconto-cupom" class="mt-2 text-success"></div>
-
-						<div id="cep-resultado" class="mt-3 text-muted small"></div>
-					</div>
-					<div class="modal-footer">
-						<button type="submit" class="btn btn-success finalizar-pedido">Finalizar Pedido</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
-
+<main id="conteudo" class="wrap checkout-page">
+    <a class="back-link" href="/colecao">{{ ui.icon('arrow') }} Continuar escolhendo</a>
+    <div class="section-heading"><div><h1>Quase suas.</h1><p>Suas peças, seu endereço e uma última conferida.</p></div></div>
+    <nav class="checkout-progress" aria-label="Etapas do pedido">
+        <ol>
+            <li><a href="#checkout-itens" data-checkout-step="1" aria-current="step"><span>1</span> Suas peças</a></li>
+            <li><a href="#checkout-entrega" data-checkout-step="2"><span>2</span> Entrega</a></li>
+            <li><a href="#checkout-revisao" data-checkout-step="3"><span>3</span> Revisão</a></li>
+        </ol>
+    </nav>
+    <div class="checkout-grid">
+        <div class="checkout-main">
+            <section class="checkout-section" id="checkout-itens" aria-labelledby="cart-items-title">
+                <div class="checkout-section-title"><span class="step-number" aria-hidden="true">1</span><div><h2 id="cart-items-title">Suas peças</h2><p>Confira as versões e as quantidades.</p></div></div>
+                <div class="checkout-items" data-checkout-items></div>
+            </section>
+            <form id="checkout-form" class="checkout-form checkout-section" data-checkout-form aria-labelledby="delivery-title">
+                <div id="checkout-entrega" class="checkout-section-title"><span class="step-number" aria-hidden="true">2</span><div><h2 id="delivery-title">Dados de entrega</h2><p>Para quem e para onde vão suas próximas favoritas?</p></div></div>
+                <div class="validation-summary" data-validation-summary role="alert" tabindex="-1" aria-labelledby="validation-title" hidden><h3 id="validation-title">Falta conferir alguns dados</h3><p>Corrija os campos indicados para continuar.</p><ul data-validation-links></ul></div>
+                <fieldset class="checkout-fieldset"><legend>Quem vai receber?</legend><div class="form-grid">
+                    <div class="form-field"><label for="delivery-nome">Nome completo</label><input id="delivery-nome" name="nome" autocomplete="name" required maxlength="200" aria-describedby="error-nome"><p id="error-nome" class="field-error" data-field-error="nome" hidden></p></div>
+                    <div class="form-field"><label for="delivery-email">E-mail</label><input id="delivery-email" type="email" name="email" autocomplete="email" placeholder="voce@exemplo.com" required maxlength="254" aria-describedby="hint-email error-email"><p id="hint-email" class="field-hint">Use um endereço de e-mail válido para identificar seu pedido.</p><p id="error-email" class="field-error" data-field-error="email" hidden></p></div>
+                </div></fieldset>
+                <fieldset class="checkout-fieldset"><legend>Seu endereço</legend><div class="form-grid">
+                    <div class="form-field"><label for="delivery-cep">CEP</label><input id="delivery-cep" name="cep" autocomplete="postal-code" inputmode="numeric" placeholder="00000-000" maxlength="9" pattern="[0-9]{5}-?[0-9]{3}" required aria-describedby="error-cep cep-feedback"><p id="error-cep" class="field-error" data-field-error="cep" hidden></p></div>
+                    <div class="cep-action"><button class="button button-outline" type="button" data-lookup-cep>Consultar CEP</button></div>
+                    <p id="cep-feedback" class="form-feedback full" data-cep-feedback role="status"></p>
+                    <p class="field-hint full">Você também pode preencher o endereço manualmente.</p>
+                    <div class="form-field full"><label for="delivery-endereco">Endereço</label><input id="delivery-endereco" name="endereco" autocomplete="address-line1" required maxlength="300" aria-describedby="error-endereco"><p id="error-endereco" class="field-error" data-field-error="endereco" hidden></p></div>
+                    <div class="form-field"><label for="delivery-numero">Número</label><input id="delivery-numero" name="numero" autocomplete="off" placeholder="123 ou s/n" required maxlength="20" aria-describedby="error-numero"><p id="error-numero" class="field-error" data-field-error="numero" hidden></p></div>
+                    <div class="form-field"><label for="delivery-complemento">Complemento (opcional)</label><input id="delivery-complemento" name="complemento" autocomplete="address-line2" maxlength="100"></div>
+                    <div class="form-field"><label for="delivery-cidade">Cidade</label><input id="delivery-cidade" name="cidade" autocomplete="address-level2" required maxlength="150" aria-describedby="error-cidade"><p id="error-cidade" class="field-error" data-field-error="cidade" hidden></p></div>
+                    <div class="form-field"><label for="delivery-uf">Estado</label><input id="delivery-uf" name="uf" autocomplete="address-level1" placeholder="SP" minlength="2" maxlength="2" pattern="[A-Za-z]{2}" required aria-describedby="hint-uf error-uf"><p id="hint-uf" class="field-hint">Sigla com duas letras, como SP.</p><p id="error-uf" class="field-error" data-field-error="uf" hidden></p></div>
+                </div></fieldset>
+                <p class="form-feedback" role="alert" tabindex="-1" data-checkout-feedback></p>
+            </form>
+        </div>
+        <aside class="order-summary" id="checkout-revisao" aria-labelledby="review-title">
+            <div class="checkout-section-title"><span class="step-number" aria-hidden="true">3</span><div><h2 id="review-title">Última conferida</h2><p>Tudo pronto para ser seu?</p></div></div>
+            <div data-checkout-summary></div>
+            <form class="coupon-form" data-coupon-form><label for="coupon-code">Tem um cupom?</label><div class="coupon-input"><input id="coupon-code" name="codigo" placeholder="Digite seu código" maxlength="100" aria-describedby="coupon-feedback"><button class="button button-outline" type="submit">Aplicar</button></div><p id="coupon-feedback" class="form-feedback" data-coupon-feedback role="status"></p></form>
+            <div class="shipping-note">{{ ui.icon('truck') }}<p>Frete grátis em compras acima de R$ 200. O desconto do cupom aparece no total.</p></div>
+            <button type="submit" form="checkout-form" class="button button-blue confirm-order" data-confirm-order>Confirmar pedido {{ ui.icon('arrow') }}</button>
+            <p class="checkout-disclaimer">{% if demo %}Ambiente de demonstração. Nenhum pagamento será cobrado.{% else %}O pedido será registrado. O pagamento ainda não está disponível nesta loja.{% endif %}</p>
+        </aside>
+    </div>
+</main>
+<div class="checkout-mobile-bar" data-checkout-mobile-bar hidden><div><span>Total da sacola</span><strong data-checkout-total></strong></div><a class="button button-blue" href="#checkout-revisao" data-review-order>Revisar pedido {{ ui.icon('arrow') }}</a></div>
 {% endblock %}
-
-{% block scripts %}
-	<script src="/js/carrinho/carrinho.js"></script>
-{% endblock %}
+{% block data %}<script type="application/json" id="initial-cart">{{ sacola|json_encode(15)|raw }}</script>{% endblock %}

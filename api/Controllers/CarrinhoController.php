@@ -1,271 +1,123 @@
 <?php
-
 namespace Api\Controllers;
 
-use Api\Models\ItemProduto;
-use Api\Models\Produto;
-use Api\Controllers\BaseController;
-use Api\Models\Cupom;
-use Api\Models\ItemPedido;
+use Api\Core\Database;
+use Api\Services\Sacola;
 use Api\Models\Pedido;
-use Exception;
-use PHPMailer\PHPMailer\PHPMailer;
+use Api\Models\ItemPedido;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use RuntimeException;
 
 class CarrinhoController extends BaseController {
-    public function index(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
-        $cupomModel = new Cupom();
-        $cupons = $cupomModel->obterTodos();
+    private function json(ResponseInterface $response, array $dados, int $status = 200): ResponseInterface {
+        $response->getBody()->write(json_encode($dados, JSON_UNESCAPED_UNICODE));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($status);
+    }
 
-        // render herdado da base
-        return $this->render($response, 'carrinho/home.twig', [
-            'pedido' => $_SESSION['pedido'] ?? null,
-            'cupons' => $cupons
-        ]);
+    private function dados(ServerRequestInterface $request): array {
+        return $request->getParsedBody() ?: (json_decode((string) $request->getBody(), true) ?: []);
+    }
+
+    public function index(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
+        return $this->render($response, 'carrinho/home.twig', ['sacola' => Sacola::estado(), 'demo' => ($_ENV['APP_DEMO'] ?? 'false') === 'true']);
+    }
+
+    public function estado(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
+        return $this->json($response, Sacola::estado());
     }
 
     public function adicionarAoCarrinho(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
-        $data = $request->getParsedBody();
-
-        if (!isset($_SESSION['pedido'])) {
-            $_SESSION['pedido'] = [
-                'idPedido'    => uniqid(),
-                'itensPedido' => []
-            ];
-        }
-
-        $idItem     = $data['idItem'];
-        $referencia = $data['referencia'];
-        $cor        = $data['cor'];
-        $tamanho    = $data['tamanho'];
-        $quantidade = (int) $data['quantidade'];
-        $preco      = (float) $data['preco'];
-
-        $itemJaExiste = false;
-
-        if (!isset($_SESSION['pedido']['itensPedido'])) {
-            $_SESSION['pedido']['itensPedido'] = [];
-        }
-
-        foreach ($_SESSION['pedido']['itensPedido'] as &$itemPedido) {
-            if ($itemPedido['idItem'] == $idItem) {
-                $itemPedido['quantidade'] += $quantidade;
-                $itemJaExiste = true;
-                break;
-            }
-        }
-
-        if (!$itemJaExiste) {
-            $_SESSION['pedido']['itensPedido'][] = [
-                'idItem'     => $idItem,
-                'referencia' => $referencia,
-                'cor'        => $cor,
-                'tamanho'    => $tamanho,
-                'quantidade' => $quantidade,
-                'preco'      => $preco
-            ];
-        }
-
-        $response->getBody()->write(json_encode(['sucesso' => true]));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+        try {
+            $data = $this->dados($request);
+            $id = filter_var($data['idItem'] ?? null, FILTER_VALIDATE_INT);
+            $q = filter_var($data['quantidade'] ?? null, FILTER_VALIDATE_INT);
+            if (!$id || !$q || $q < 1) throw new RuntimeException('Escolha uma peça e uma quantidade válida.');
+            Sacola::atualizar($id, Sacola::quantidade($id) + $q);
+            return $this->json($response, ['sucesso' => true, 'sacola' => Sacola::estado()]);
+        } catch (RuntimeException $e) { return $this->json($response, ['sucesso' => false, 'mensagem' => $e->getMessage()], 400); }
     }
 
-    public function excluir(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface {
-        $idProduto = $args['id'];
+    public function atualizar(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
+        try {
+            $data = $this->dados($request);
+            $id = filter_var($data['idItem'] ?? null, FILTER_VALIDATE_INT);
+            $q = filter_var($data['quantidade'] ?? null, FILTER_VALIDATE_INT);
+            if (!$id || $q === false || $q === null) throw new RuntimeException('Informe uma quantidade inteira.');
+            Sacola::atualizar($id, $q);
+            return $this->json($response, ['sucesso' => true, 'sacola' => Sacola::estado()]);
+        } catch (RuntimeException $e) { return $this->json($response, ['sucesso' => false, 'mensagem' => $e->getMessage()], 400); }
+    }
 
-        $produtoModel = new Produto();
-        $produtoDesativadoComSucesso = $produtoModel->desativar($idProduto);
-
-        $itemProdutoModel = new ItemProduto();
-        $itensProduto = $itemProdutoModel->obterComRestricoes(array("idProduto" => $idProduto));
-
-        $possuiItensAtivos = !empty($itensProduto);
-        $itensDesativadosComSucesso = true;
-
-        if ($possuiItensAtivos) {
-            $itensDesativadosComSucesso = $itemProdutoModel->desativar($idProduto);
-        }
-
-        $sucesso = $produtoDesativadoComSucesso && $itensDesativadosComSucesso;
-
-        $resultado = [
-            'sucesso' => $sucesso,
-            'mensagem' => $sucesso
-                ? 'Produto excluído com sucesso.'
-                : 'Falha ao excluir produto.'
-        ];
-
-        $response->getBody()->write(json_encode($resultado));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+    public function aplicarCupom(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
+        try {
+            $codigo = trim((string) ($this->dados($request)['codigo'] ?? ''));
+            if ($codigo !== '') Sacola::cupom($codigo, (int) round(Sacola::estado()['subtotal'] * 100));
+            $_SESSION['cupom'] = $codigo;
+            return $this->json($response, ['sucesso' => true, 'sacola' => Sacola::estado()]);
+        } catch (RuntimeException $e) { return $this->json($response, ['sucesso' => false, 'mensagem' => $e->getMessage()], 400); }
     }
 
     public function calcularFrete(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
-        if (!isset($_SESSION)) {
-            session_start();
-        }
+        $sacola = Sacola::estado();
+        return $this->json($response, ['subtotal' => number_format($sacola['subtotal'], 2, ',', '.'), 'frete' => number_format($sacola['frete'], 2, ',', '.')]);
+    }
 
-        $subtotal = 0;
-
-        if (isset($_SESSION['pedido']['itensPedido'])) {
-            foreach ($_SESSION['pedido']['itensPedido'] as $itemPedido) {
-                $subtotal += ((float) $itemPedido['preco'] * (int) $itemPedido['quantidade']);
-            }
-        }
-
-        $frete = 20;
-        if ($subtotal >= 52 && $subtotal <= 166.59) {
-            $frete = 15;
-        } elseif ($subtotal > 200) {
-            $frete = 0;
-        }
-
-        $dados = [
-            'subtotal' => number_format($subtotal, 2, ',', '.'),
-            'frete' => number_format($frete, 2, ',', '.')
-        ];
-
-        $response->getBody()->write(json_encode($dados));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+    public function endereco(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface {
+        $cep = $args['cep'];
+        $ch = curl_init('https://viacep.com.br/ws/' . $cep . '/json/');
+        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 6, CURLOPT_CONNECTTIMEOUT => 3]);
+        $body = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        $data = $body ? json_decode($body, true) : null;
+        if ($status !== 200 || !$data || isset($data['erro'])) return $this->json($response, ['sucesso' => false, 'mensagem' => 'Não foi possível consultar este CEP. Confira o número e preencha o endereço.'], 400);
+        return $this->json($response, ['sucesso' => true, 'logradouro' => $data['logradouro'] ?? '', 'bairro' => $data['bairro'] ?? '', 'cidade' => $data['localidade'] ?? '', 'uf' => $data['uf'] ?? '']);
     }
 
     public function finalizarPedido(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
+        $pdo = Database::getInstance();
         try {
-            if (!isset($_SESSION)) {
-                session_start();
+            $data = $this->dados($request);
+            foreach (['nome', 'email', 'cep', 'endereco', 'numero', 'complemento', 'cidade', 'uf'] as $campo) {
+                $data[$campo] = is_scalar($data[$campo] ?? null) ? trim((string) $data[$campo]) : '';
             }
-
-            $data = json_decode($request->getBody()->getContents(), true);
-
-            $cep = $data['cep'] ?? '';
-            $emailCliente = $data['email'] ?? '';
-            $idCupom = $data['cupom'] ?? '';
-
-            if (empty($cep) || empty($emailCliente)) {
-                throw new Exception('Dados incompletos.');
+            $data['uf'] = strtoupper($data['uf']);
+            $cep = preg_replace('/\D/', '', $data['cep']);
+            $erros = [];
+            if (!preg_match('/^[0-9]{5}-?[0-9]{3}$/', $data['cep'])) $erros['cep'] = 'Informe um CEP com 8 números.';
+            if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) $erros['email'] = 'Informe um e-mail válido, como voce@exemplo.com.';
+            foreach (['nome' => 'Informe o nome de quem vai receber.', 'endereco' => 'Informe a rua ou avenida.', 'numero' => 'Informe o número ou s/n.', 'cidade' => 'Informe a cidade.'] as $campo => $mensagem) {
+                if ($data[$campo] === '') $erros[$campo] = $mensagem;
             }
-
-            $viaCep = file_get_contents("https://viacep.com.br/ws/{$cep}/json");
-            $endereco = json_decode($viaCep, true);
-
-            if (isset($endereco['erro'])) {
-                throw new Exception('CEP inválido.');
+            if (!in_array($data['uf'], ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'], true)) $erros['uf'] = 'Informe a sigla de um estado brasileiro, como SP.';
+            if ($erros) return $this->json($response, ['sucesso' => false, 'mensagem' => 'Confira os campos indicados para continuar.', 'erros' => $erros], 400);
+            $sacola = Sacola::estado();
+            if (!$sacola['itens']) throw new RuntimeException('Sua sacola está vazia. Escolha uma peça para continuar.');
+            $pdo->beginTransaction();
+            foreach ($sacola['itens'] as $item) {
+                if (!$item['disponivel']) throw new RuntimeException('Revise as peças indisponíveis na sua sacola.');
+                $stmt = $pdo->prepare('UPDATE itens_produtos SET estoque = estoque - :q WHERE id = :id AND ativo = 1 AND estoque >= :q');
+                $stmt->execute(['q' => $item['quantidade'], 'id' => $item['idItem']]);
+                if ($stmt->rowCount() !== 1) throw new RuntimeException('O estoque mudou. Revise sua sacola antes de continuar.');
             }
-
-            if (!isset($_SESSION['pedido']['itensPedido']) || empty($_SESSION['pedido']['itensPedido'])) {
-                throw new Exception('Carrinho vazio.');
-            }
-
-            $valorDescontoCupom = 0;
-            $cupomValido = false;
-            if (isset($idCupom) && is_numeric($idCupom)) {
-                $cupomModel = new Cupom();
-                $cupom = $cupomModel->obterComRestricoes(array("id" => $idCupom));
-                if(empty($cupom)) {
-                    throw new Exception('Cupom selecionado inválido.');
-                }
-
-                $cupom = array_shift($cupom);
-                $cupomValido = true;
-                $valorDescontoCupom = $cupom["valorDesconto"];
-            }
-
-            $subTotal = 0;
-            foreach ($_SESSION['pedido']['itensPedido'] as $itemPedido) {
-                $subTotal += ((float) $itemPedido['preco'] * (int) $itemPedido['quantidade']);
-            }
-
-            if ($subTotal >= 52 && $subTotal <= 166.59) {
-                $frete = 15.00;
-            } elseif ($subTotal > 200) {
-                $frete = 0.00;
-            } else {
-                $frete = 20.00;
-            }
-
-            $total = $subTotal + $frete - $valorDescontoCupom;
-
-            $pedidoModel = new Pedido();
-            $idPedido = $pedidoModel->criar(
-                array(
-                    "valorPedido" => $total,
-                    "valorFrete"  => $frete,
-                    "status"      => "ABERTO",
-                    "idCupom"     => ($cupomValido ? $idCupom : NULL)
-                )
-            );
-
-            $itemPedidoModel = new ItemPedido();
-            foreach ($_SESSION['pedido']['itensPedido'] as $itemPedido) {
-                $itemPedidoModel->criar(
-                    array(
-                        "idPedido"   => $idPedido,
-                        "quantidade" => $itemPedido['quantidade'],
-                        'idItem'     => $itemPedido['idItem']
-                    )
-                );
-            }
-
-            $resumo = [
-                'idPedido'          => $idPedido,
-                'subtotal'          => number_format($subTotal, 2, ',', '.'),
-                'frete'             => number_format($frete, 2, ',', '.'),
-                'total'             => number_format($total, 2, ',', '.'),
-                'possuiCupom'       => $cupomValido,
-                'descontoCupom'     => number_format($valorDescontoCupom, 2, ',', '.'),
-                'cep'               => $cep,
-                'email'             => $emailCliente,
-                'enderecoFormatado' => "{$endereco['logradouro']}, {$endereco['bairro']}, {$endereco['localidade']} - {$endereco['uf']}"
-            ];
-
-            $mail = new PHPMailer(true);
-            try {
-                $mail->isSMTP();
-                $mail->Host = 'smtp-relay.brevo.com';
-                $mail->SMTPAuth = true;
-                $mail->Username = 'estevaotlnf@gmail.com';
-                $mail->Password = 'vE4FS89nGwgOUAPV';
-                $mail->SMTPSecure = 'tls';
-                $mail->Port = 587;
-                $mail->setLanguage("br");
-                $mail->CharSet = 'UTF-8';
-
-                $mail->setFrom('estevaotlnf@gmail.com', 'Loja Exemplo');
-                $mail->addAddress($emailCliente);
-                $mail->Subject = 'Confirmação de Pedido';
-                $mail->isHTML(true);
-                $mail->Body = "
-                    <h3>Pedido confirmado!</h3>" .
-                    "<p><strong>Subtotal:</strong> R$ {$resumo['subtotal']}</p>" .
-                    "<p><strong>Frete:</strong> R$ {$resumo['frete']}</p>" .
-                    ($cupomValido ? "<p><strong>DescontoCupom:</strong> R$ {$resumo['descontoCupom']}</p>" : "") .
-                    "<p><strong>Total:</strong> R$ {$resumo['total']}</p>" .
-                    "<hr>" .
-                    "<p>Entrega para: {$resumo['enderecoFormatado']}</p>
-                ";
-
-                $mail->send();
-            } catch (Exception $e) {}
-
-            $_SESSION['resumoPedido'] = $resumo;
-            unset($_SESSION['pedido']);
-
-            $response->getBody()->write(json_encode([
-                'sucesso' => true
-            ]));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-        } catch (\Throwable $th) {
-            $response->getBody()->write(json_encode([
-                'sucesso' => false,
-                'mensagem' => $th->getMessage()
-            ]));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            $id = (new Pedido())->criar(['valorPedido' => $sacola['total'], 'valorFrete' => $sacola['frete'], 'status' => 'ABERTO', 'idCupom' => $sacola['cupom']['id'] ?? null]);
+            foreach ($sacola['itens'] as $item) (new ItemPedido())->criar(['idPedido' => $id, 'quantidade' => $item['quantidade'], 'idItem' => $item['idItem']]);
+            $endereco = trim($data['endereco']) . ', ' . trim($data['numero']) . (!empty($data['complemento']) ? ', ' . trim($data['complemento']) : '') . ' — ' . trim($data['cidade']) . '/' . strtoupper($data['uf']) . ' — CEP ' . $cep;
+            // Os dados de entrega acompanham o pedido; sem dependência de envio de e-mail.
+            $pdo->prepare('INSERT INTO entregas_pedidos (idPedido, nome, email, endereco) VALUES (?, ?, ?, ?)')->execute([$id, trim($data['nome']), trim($data['email']), $endereco]);
+            $pdo->commit();
+            $_SESSION['resumoPedido'] = array_merge($sacola, ['idPedido' => $id, 'nome' => trim($data['nome']), 'email' => trim($data['email']), 'enderecoFormatado' => $endereco, 'demo' => ($_ENV['APP_DEMO'] ?? 'false') === 'true']);
+            $_SESSION['resumoPedido']['emailEnviado'] = \Api\Services\EmailPedido::enviar($_SESSION['resumoPedido']);
+            unset($_SESSION['pedido'], $_SESSION['cupom']);
+            return $this->json($response, ['sucesso' => true, 'redirect' => '/carrinho/retorno']);
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            $mensagem = $e instanceof RuntimeException ? $e->getMessage() : 'Não foi possível registrar o pedido. Tente novamente.';
+            return $this->json($response, ['sucesso' => false, 'mensagem' => $mensagem], 400);
         }
     }
 
     public function retorno(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
-        $html = $this->twig->render('carrinho/retorno.twig', ['resumo' => $_SESSION['resumoPedido'] ?? null]);
-        $response->getBody()->write($html);
-        return $response;
+        return $this->render($response, 'carrinho/retorno.twig', ['resumo' => $_SESSION['resumoPedido'] ?? null]);
     }
 }

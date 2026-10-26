@@ -1,140 +1,28 @@
-{% extends "base.twig" %}
-
-{% block title %}Produtos
-{% endblock %}
-
-{% block link %}
-	<link rel="stylesheet" href="/assets/styles.css">
-{% endblock %}
-
+{% extends 'gestao/base.twig' %}
+{% import 'gestao/macros.twig' as g %}
+{% block title %}Produtos{% endblock %}
 {% block content %}
-	<nav>
-		<a href="/">Início</a>
-		<a href="/cupons">Cupons</a>
-		<a href="/pedidos">Pedidos</a>
-
-		{% if pedido is defined and pedido.itensPedido is defined and pedido.itensPedido|length > 0 %}
-			{% set totalItens = 0 %}
-			{% for item in pedido.itensPedido %}
-				{% set totalItens = totalItens + 1 %}
-			{% endfor %}
-			<a href="/carrinho">
-				Carrinho
-				<span class="top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ totalItens }}</span>
-			</a>
-		{% endif %}
-	</nav>
-
-	<main class="container my-5">
-		<h1>Bem-vindo ao seu painel de produtos!</h1>
-		<p>Aqui você poderá gerenciar seus produtos e acompanhar tudo com agilidade.</p>
-
-		<button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#modal-cadastro-produto">
-			Cadastrar Novo Produto
-		</button>
-
-		{% if erro %}
-			<div class="error-message">{{ erro }}</div>
-		{% endif %}
-
-		<!-- Modal -->
-		<div class="modal fade modal-xl" id="modal-cadastro-produto" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h1 class="modal-title fs-5" id="exampleModalLabel">Cadastro Produtos</h1>
-						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-					</div>
-					<div class="modal-body">
-						<form class="formulario-cadastro-produto" action="/produtos/salvar" method="POST">
-							<div class="mb-3">
-								<label for="nomeProduto" class="form-label">Nome</label>
-								<textarea class="form-control" id="nomeProduto" rows="3" name="nomeProduto"></textarea>
-							</div>
-
-							<hr>
-							<h5>Itens do Produto</h5>
-
-							<div id="area-itens-dinamicos"></div>
-
-							<button type="button" class="btn btn-warning adicionar-mais-itens">Adicionar</button>
-							<button type="submit" class="btn btn-primary salvar-produtos">Salvar</button>
-						</form>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- Modal Carrinho -->
-		<div class="modal fade" id="modal-carrinho" tabindex="-1" aria-labelledby="modalCarrinhoLabel" aria-hidden="true">
-			<div class="modal-dialog modal-lg">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title" id="modalCarrinhoLabel">Itens disponíveis</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-					</div>
-					<div class="modal-body">
-						<div
-							id="itens-disponiveis-carrinho"><!-- Itens serão inseridos aqui dinamicamente -->
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		{% for produto in produtos %}
-			<div class="card mb-4">
-				<div class="card-header bg-dark text-white" data-id="{{produto.id}}">
-					Produto #{{ produto.id }} 
-
-					<button class="btn btn-info editar-produto">Editar</button>
-					<button class="btn btn-danger excluir-produto">Excluir</button>
-					<button class="btn btn-success comprar-produto">Comprar</button>
-				</div>
-
-				<div class="card-body">
-					<p>
-						<strong>Nome:</strong>
-						<span class="nome-produto">{{ produto.nome }}</span></p>
-
-					<hr>
-					<h5>Itens:</h5>
-					{% set itens = produto.itens %}
-					{% if itens|length > 0 %}
-						<table class="table table-bordered table-sm mt-2">
-							<thead class="table-secondary">
-								<tr>
-									<th>Item</th>
-									<th>Estoque</th>
-									<th>Preço</th>
-								</tr>
-							</thead>
-							<tbody>
-								{% for item in itens %}
-									<input type="hidden" value="{{item.id}}" class="idItem"/>
-
-									<tr>
-										<td class="descricao-item">{{ item.referencia~" - "~item.tamanho~" - "~item.cor }}</td>
-										<td class="estoque-item">{{ item.estoque }}</td>
-										<td>R$ <span class="preco-item">{{ item.preco|number_format(2, ",", ".") }}</span></td>
-									</tr>
-								{% endfor %}
-							</tbody>
-						</table>
-					{% else %}
-						<p class="text-muted">Este produto não possui itens registrados.</p>
-					{% endif %}
-				</div>
-			</div>
-		{% else %}
-			<p>Nenhum produto cadastrado ainda.</p>
-		{% endfor %}
-	</main>
+<div class="page-heading"><div><h1>Produtos</h1><p>Seu catálogo, suas cores, suas possibilidades.</p></div><button class="button button-blue" data-new-product>{{ g.icon('plus') }} Novo produto</button></div>
+<div class="summary-strip" aria-label="Resumo do catálogo"><div><strong>{{ resumo.publicados }}</strong><span>produtos publicados</span></div><div><strong>{{ resumo.variacoes }}</strong><span>variações cadastradas</span></div><div><strong>{{ resumo.unidades }}</strong><span>unidades em estoque</span></div><div class="summary-attention"><strong>{{ resumo.baixo }}</strong><span>variações com até 5 unidades</span></div></div>
+<section class="list-panel" data-managed-list="produtos" aria-labelledby="catalog-heading">
+<div class="panel-heading"><div><h2 id="catalog-heading">Seu catálogo</h2><p>Encontre uma peça ou abra suas variações.</p></div><span class="panel-counter" data-result-count role="status" aria-live="polite"></span></div>
+<div class="list-tabs" role="group" aria-label="Situação dos produtos"><button data-list-tab="publicados" aria-pressed="true">Publicados <span>{{ resumo.publicados }}</span></button><button data-list-tab="arquivados" aria-pressed="false">Arquivados <span>{{ produtos|length - resumo.publicados }}</span></button></div>
+<div class="list-toolbar"><label class="list-search">{{ g.icon('search') }}<span class="sr-only">Buscar produtos</span><input type="search" data-list-search placeholder="Busque por nome, cor ou referência"></label><div class="list-filters"><label><span class="filter-label">Categoria</span><select data-filter-key="categoria" aria-label="Categoria"><option value="">Todas</option>{% for categoria in categorias %}<option>{{ categoria|e }}</option>{% endfor %}</select></label><label><span class="filter-label">Estoque</span><select data-filter-key="situacao" aria-label="Estoque"><option value="">Todos</option><option value="baixo">Estoque baixo</option><option value="esgotado">Sem estoque</option></select></label><label><span class="filter-label">Ordenar produtos</span><select data-list-sort aria-label="Ordenar produtos"><option value="recentes">Mais recentes</option><option value="nome">Nome da peça</option><option value="estoque">Menor estoque</option></select></label></div></div>
+<div class="main-table-wrap"><table class="admin-table product-table" data-list-table><thead><tr><th scope="col">Peça</th><th scope="col">Situação</th><th scope="col">Estoque</th><th scope="col">Preço</th><th scope="col" class="actions-heading">Ações</th></tr></thead>
+{% for produto in produtos %}
+<tbody data-entry data-group="{{ produto.ativo ? 'publicados' : 'arquivados' }}" data-categoria="{{ produto.categoria|e }}" data-situacao="{{ produto.situacao }}" data-nome="{{ produto.nome|e }}" data-estoque="{{ produto.estoque_total }}" data-id="{{ produto.id }}" data-search="{{ produto.nome|e }} {{ produto.categoria|e }} {% for item in produto.itens %}{{ item.referencia|e }} {{ item.cor|e }} {{ item.tamanho|e }} {% endfor %}">
+<tr class="main-row"><th scope="row"><div class="product-identity">{{ g.foto(produto) }}<div><strong>{{ produto.nome|e }}</strong><span>{{ produto.categoria|e }}</span><button class="variations-toggle" data-expand="variacoes-{{ produto.id }}" aria-expanded="false" aria-controls="variacoes-{{ produto.id }}">{{ produto.itens|length }} {{ produto.itens|length == 1 ? 'variação' : 'variações' }} {{ g.icon('chevron') }}<span class="sr-only"> de {{ produto.nome|e }}</span></button></div></div></th><td data-label="Situação">{{ g.status(produto.situacao) }}</td><td data-label="Estoque"><strong class="stock-number">{{ produto.estoque_total }}</strong><span class="cell-note"> unidades</span></td><td data-label="Preço"><strong class="table-price">R$ {{ produto.preco_min|number_format(2, ',', '.') }}</strong>{% if produto.preco_max != produto.preco_min %}<span class="cell-note">até R$ {{ produto.preco_max|number_format(2, ',', '.') }}</span>{% endif %}</td><td class="row-actions">{% if produto.ativo %}<button class="button button-small button-outline" data-edit-product="{{ produto.id }}" aria-label="Editar {{ produto.nome|e }}">{{ g.icon('edit') }} Editar</button><button class="icon-button subdued" data-admin-action="produto-arquivar" data-id="{{ produto.id }}" aria-label="Arquivar {{ produto.nome|e }}" title="Arquivar produto">{{ g.icon('archive') }}</button>{% else %}<button class="button button-small button-outline" data-admin-action="produto-restaurar" data-id="{{ produto.id }}" aria-label="Recuperar {{ produto.nome|e }}">{{ g.icon('restore') }} Recuperar</button>{% endif %}</td></tr>
+<tr class="detail-row" id="variacoes-{{ produto.id }}" hidden><td colspan="5"><div class="variation-details"><div class="detail-heading"><h3>Variações de {{ produto.nome|e }}</h3>{% if produto.ativo %}<a href="/peca/{{ produto.id }}" target="_blank" rel="noopener">Ver na loja {{ g.icon('external') }}</a>{% endif %}</div><div class="table-scroll" role="region" aria-label="Variações de {{ produto.nome|e }}" tabindex="0"><table class="variation-table"><thead><tr><th scope="col">Referência</th><th scope="col">Cor</th><th scope="col">Tamanho</th><th scope="col">Estoque</th><th scope="col">Preço</th></tr></thead><tbody>{% for item in produto.itens %}<tr><td>{{ item.referencia|e }}</td><td>{{ item.cor|e }}</td><td>{{ item.tamanho|e }}</td><td><span class="stock-level {{ item.estoque <= 5 ? 'stock-low' : '' }}">{{ item.estoque }} {{ item.estoque == 1 ? 'unidade' : 'unidades' }}</span></td><td>R$ {{ item.preco|number_format(2, ',', '.') }}</td></tr>{% else %}<tr><td colspan="5">Este produto não tem variações ativas.</td></tr>{% endfor %}</tbody></table></div></div></td></tr></tbody>
+{% endfor %}</table></div>
+<div class="list-empty" data-list-empty hidden>{{ g.icon('box') }}<h3>Nenhuma peça nesta seleção.</h3><p>Tente outra busca ou limpe os filtros para conferir o catálogo.</p><button class="button button-outline" data-clear-list>Limpar filtros</button></div>
+<div class="panel-footnote"><span>Estoque baixo: até 5 unidades por variação.</span><span>Valores e quantidades do seu cadastro.</span></div></section>
 {% endblock %}
-
-{% block scripts %}
-	<script src="/js/produto/produto.js"></script>
+{% block dialogs %}
+<dialog class="editor-dialog product-editor" id="product-editor" aria-labelledby="product-editor-title"><form data-product-editor>
+<div class="dialog-heading"><div><h2 id="product-editor-title">Novo produto</h2><p>Da ideia à sua vitrine.</p></div><button class="icon-button" type="button" data-close-dialog aria-label="Fechar cadastro de produto">{{ g.icon('close') }}</button></div>
+<div class="editor-content"><div class="editor-section"><div class="section-intro"><h3>Sobre a peça</h3><p>Estas informações aparecem na loja.</p></div><div class="product-basic-grid"><div class="editor-fields"><label for="product-nome">Nome da peça</label><input id="product-nome" name="nome" required maxlength="500" placeholder="Ex.: Camiseta Sol" data-error-key="nome"><p class="field-error" data-field-error="nome" id="product-error-nome" hidden></p><label for="product-categoria">Categoria</label><input id="product-categoria" name="categoria" list="category-options" required maxlength="100" placeholder="Ex.: Camisetas" data-error-key="categoria"><p class="field-error" data-field-error="categoria" id="product-error-categoria" hidden></p><datalist id="category-options">{% for categoria in categorias %}<option value="{{ categoria|e }}">{% endfor %}</datalist><label for="product-descricao">Descrição (opcional)</label><textarea id="product-descricao" name="descricao" rows="3" maxlength="5000" placeholder="Conte sobre o tecido, o caimento e os detalhes da peça." data-error-key="descricao"></textarea><p class="field-error" data-field-error="descricao" id="product-error-descricao" hidden></p></div><div class="image-setting"><div class="image-preview" data-product-preview aria-hidden="true">{{ g.icon('box') }}</div><label for="product-imagem">Imagem da peça</label><select id="product-imagem" name="imagem" data-error-key="imagem"><option value="">Sem imagem</option><option value="demo:0">Camiseta Sol</option><option value="demo:1">Camiseta Forma</option><option value="demo:2">Moletom Pausa</option><option value="demo:3">Ecobag Maré</option></select><p class="field-error" data-field-error="imagem" id="product-error-imagem" hidden></p><p class="field-hint">As imagens disponíveis são ilustrativas da coleção.</p></div></div></div>
+<div class="editor-section"><div class="section-intro section-inline"><div><h3>Cores, tamanhos e estoque</h3><p>Cada combinação tem seu próprio preço e quantidade.</p></div><button class="button button-small button-outline" type="button" data-add-variant>{{ g.icon('plus') }} Adicionar variação</button></div><div data-variant-rows></div><p class="field-error" data-field-error="itens" id="product-error-itens" hidden></p><datalist id="color-options">{% for cor in ['Amarelo','Branco','Azul','Lilás','Preto','Natural','Vermelho'] %}<option value="{{ cor }}">{% endfor %}</datalist><datalist id="size-options">{% for tamanho in ['P','M','G','GG','XG','Único'] %}<option value="{{ tamanho }}">{% endfor %}</datalist></div>
+<p class="form-feedback" role="alert" tabindex="-1" data-editor-feedback></p></div>
+<div class="editor-footer"><span>Confira as variações antes de salvar.</span><div><button class="button button-outline" type="button" data-close-dialog>Cancelar</button><button class="button button-blue" type="submit" data-save-product>{{ g.icon('check') }} Salvar produto</button></div></div></form></dialog>
 {% endblock %}
+{% block data %}<script type="application/json" id="admin-products">{{ produtos|json_encode(15)|raw }}</script>{% endblock %}

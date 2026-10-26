@@ -1,118 +1,18 @@
-{% extends "base.twig" %}
-
-{% block title %}Cupons
-{% endblock %}
-
-{% block link %}
-	<link rel="stylesheet" href="/assets/styles.css">
-{% endblock %}
-
+{% extends 'gestao/base.twig' %}
+{% import 'gestao/macros.twig' as g %}
+{% block title %}Cupons{% endblock %}
 {% block content %}
-	<nav>
-		<a href="/">Início</a>
-		<a href="/produtos">Produtos</a>
-		<a href="/pedidos">Pedidos</a>
-
-		{% if pedido is defined and pedido.itensPedido is defined and pedido.itensPedido|length > 0 %}
-			{% set totalItens = 0 %}
-			{% for item in pedido.itensPedido %}
-				{% set totalItens = totalItens + 1 %}
-			{% endfor %}
-			<a href="/carrinho">
-				Carrinho
-				<span class="top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ totalItens }}</span>
-			</a>
-		{% endif %}
-	</nav>
-
-	<main class="container my-5">
-		<h1>Bem-vindo ao seu painel de cupons!</h1>
-		<p>Aqui você poderá gerenciar seus cupons e acompanhar tudo com agilidade.</p>
-
-		<button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#modal-cadastro-cupom">
-			Cadastrar Novo Cupom
-		</button>
-
-		{% if erro %}
-			<div class="error-message">{{ erro }}</div>
-		{% endif %}
-
-		<!-- Modal -->
-		<div class="modal fade modal-xl" id="modal-cadastro-cupom" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h1 class="modal-title fs-5" id="exampleModalLabel">Cadastro Cupons</h1>
-						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-					</div>
-					<div class="modal-body">
-						<form class="formulario-cadastro-cupom" action="/cupons/salvar" method="POST">
-							<div class="mb-3">
-								<label for="referencia" class="form-label">Referencia</label>
-								<input class="form-control" type="text" id="referencia" name="referencia">
-							</div>
-
-							<div class="mb-3">
-								<label for="validade" class="form-label">Validade</label>
-								<input class="form-control" type="datetime-local" id="validade" name="validade">
-							</div>
-
-							<div class="mb-3">
-								<label for="valorMinimo" class="form-label">Valor Minimo</label>
-								<input class="form-control" type="number" step="0.01" class="form-control" name="valorMinimo" id="valorMinimo">
-							</div>
-
-							<div class="mb-3">
-								<label for="valorDesconto" class="form-label">Valor Desconto</label>
-								<input class="form-control" type="number" step="0.01" class="form-control" name="valorDesconto" id="valorDesconto">
-							</div>
-
-							<button type="submit" class="btn btn-primary salvar-cupom">Salvar</button>
-						</form>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		{% for cupom in cupons %}
-			<div class="card mb-4" data-id="{{cupom.id}}">
-				<div class="card-header bg-dark text-white">
-					Cupom #{{ cupom.id }}
-
-					<button class="btn btn-info editar-cupom">Editar</button>
-					<button class="btn btn-danger excluir-cupom">Excluir</button>
-				</div>
-
-				<div class="card-body">
-					<p>
-						<strong>Referencia:</strong>
-						<span class="referencia-cupom">{{ cupom.referencia }}</span>
-					</p>
-					<p>
-						<strong>Validade:</strong>
-						<span class="validade-cupom">{{ cupom.validade }}</span>
-					</p>
-					<p>
-						<strong>Valor Minimo: R$
-						</strong>
-						<span class="valorMinimo-cupom">{{ cupom.valorMinimo|number_format(2, ",", ".") }}</span>
-					</p>
-					<p>
-						<strong>Valor Desconto: R$
-						</strong>
-						<span class="valorDesconto-cupom">{{ cupom.valorDesconto|number_format(2, ",", ".") }}</span>
-					</p>
-				</div>
-			</div>
-		{% else %}
-			<p>Nenhum cupom cadastrado ainda.</p>
-		{% endfor %}
-	</main>
+{% set habilitados = 0 %}{% for cupom in cupons %}{% if cupom.ativo %}{% set habilitados = habilitados + 1 %}{% endif %}{% endfor %}
+<div class="page-heading"><div><h1>Cupons</h1><p>Um convite para a próxima peça favorita.</p></div><button class="button button-blue" data-new-coupon>{{ g.icon('plus') }} Novo cupom</button></div>
+<div class="summary-strip three" aria-label="Resumo dos cupons"><div><strong>{{ resumo.ativos }}</strong><span>cupons dentro da validade</span></div><div><strong>{{ resumo.vencidos }}</strong><span>cupons vencidos</span></div><div><strong>{{ resumo.sem_prazo }}</strong><span>cupons sem prazo final</span></div></div>
+<section class="list-panel" data-managed-list="cupons" aria-labelledby="coupon-list-title"><div class="panel-heading"><div><h2 id="coupon-list-title">Códigos da sua loja</h2><p>Confira o desconto, as condições e a validade.</p></div><span class="panel-counter" data-result-count role="status" aria-live="polite"></span></div>
+<div class="list-tabs" role="group" aria-label="Situação dos cupons"><button data-list-tab="habilitados" aria-pressed="true">Habilitados <span>{{ habilitados }}</span></button><button data-list-tab="desativados" aria-pressed="false">Desativados <span>{{ cupons|length - habilitados }}</span></button><button data-list-tab="todos" aria-pressed="false">Todos</button></div>
+<div class="list-toolbar"><label class="list-search">{{ g.icon('search') }}<span class="sr-only">Buscar cupons</span><input type="search" data-list-search placeholder="Busque pelo código do cupom"></label><div class="list-filters"><label><span class="filter-label">Validade do cupom</span><select data-filter-key="situacao" aria-label="Validade do cupom"><option value="">Todas as situações</option><option value="ativo">Dentro da validade</option><option value="vencido">Vencidos</option><option value="inativo">Desativados</option></select></label></div></div>
+<div class="main-table-wrap"><table class="admin-table coupon-table" data-list-table><thead><tr><th scope="col">Código</th><th scope="col">Desconto</th><th scope="col">Compra mínima</th><th scope="col">Validade</th><th scope="col">Situação</th><th scope="col" class="actions-heading">Ações</th></tr></thead>
+{% for cupom in cupons %}<tbody data-entry data-group="{{ cupom.ativo ? 'habilitados' : 'desativados' }}" data-situacao="{{ cupom.situacao }}" data-search="{{ cupom.referencia|e }}"><tr class="main-row"><th scope="row"><div class="coupon-identity">{{ g.icon('ticket') }}<strong class="coupon-code">{{ cupom.referencia|e }}</strong></div></th><td data-label="Desconto"><strong class="table-price">R$ {{ cupom.valorDesconto|number_format(2, ',', '.') }}</strong></td><td data-label="Compra mínima">R$ {{ cupom.valorMinimo|number_format(2, ',', '.') }}</td><td data-label="Validade">{% if cupom.validade %}{{ cupom.validade|date('d/m/Y') }}<span class="cell-note">{{ cupom.validade|date('H:i') }}</span>{% else %}Sem prazo final{% endif %}</td><td data-label="Situação">{{ g.status(cupom.situacao) }}</td><td class="row-actions"><button class="button button-small button-outline" data-edit-coupon="{{ cupom.id }}" aria-label="Editar cupom {{ cupom.referencia|e }}">{{ g.icon('edit') }} Editar</button>{% if cupom.ativo %}<button class="icon-button subdued" data-admin-action="cupom-desativar" data-id="{{ cupom.id }}" aria-label="Desativar cupom {{ cupom.referencia|e }}" title="Desativar cupom">{{ g.icon('archive') }}</button>{% else %}<button class="icon-button subdued" data-admin-action="cupom-reativar" data-id="{{ cupom.id }}" aria-label="Reativar cupom {{ cupom.referencia|e }}" title="Reativar cupom">{{ g.icon('restore') }}</button>{% endif %}</td></tr></tbody>{% endfor %}</table></div>
+<div class="list-empty" data-list-empty hidden>{{ g.icon('ticket') }}<h3>Nenhum cupom nesta seleção.</h3><p>Confira o código buscado ou escolha outra situação.</p><button class="button button-outline" data-clear-list>Limpar filtros</button></div><div class="panel-footnote"><span>Os descontos são valores em reais.</span><span>Cupons vencidos não podem ser usados na compra.</span></div></section>
 {% endblock %}
-
-{% block scripts %}
-	<script src="/js/cupom/cupom.js"></script>
+{% block dialogs %}
+<dialog class="editor-dialog coupon-editor" id="coupon-editor" aria-labelledby="coupon-editor-title"><form data-coupon-editor><div class="dialog-heading"><div><h2 id="coupon-editor-title">Novo cupom</h2><p>Uma condição especial, do seu jeito.</p></div><button class="icon-button" type="button" data-close-dialog aria-label="Fechar cadastro de cupom">{{ g.icon('close') }}</button></div><div class="editor-content"><div class="section-intro"><h3>Código e condições</h3><p>As regras serão conferidas ao aplicar o cupom na sacola.</p></div><div class="coupon-fields"><div class="full"><label for="coupon-referencia">Código do cupom</label><input id="coupon-referencia" name="referencia" required maxlength="100" pattern="[A-Za-z0-9_-]+" placeholder="Ex.: OLA15" data-error-key="referencia"><p class="field-error" id="coupon-error-referencia" data-field-error="referencia" hidden></p><p class="field-hint">Use letras, números, hífen ou sublinhado. O código será salvo em maiúsculas.</p></div><div><label for="coupon-valorDesconto">Desconto (R$)</label><input id="coupon-valorDesconto" type="number" name="valorDesconto" required min="0.01" max="99999999.99" step="0.01" inputmode="decimal" placeholder="15,00" data-error-key="valorDesconto"><p class="field-error" id="coupon-error-valorDesconto" data-field-error="valorDesconto" hidden></p></div><div><label for="coupon-valorMinimo">Compra mínima (R$)</label><input id="coupon-valorMinimo" type="number" name="valorMinimo" required min="0" max="99999999.99" step="0.01" value="0" inputmode="decimal" data-error-key="valorMinimo"><p class="field-error" id="coupon-error-valorMinimo" data-field-error="valorMinimo" hidden></p></div><div class="full"><label for="coupon-validade">Validade (opcional)</label><input id="coupon-validade" name="validade" type="datetime-local" step="1" data-error-key="validade"><p class="field-error" id="coupon-error-validade" data-field-error="validade" hidden></p><p class="field-hint">Deixe em branco para não definir um prazo final.</p></div></div><div class="coupon-note">O desconto vale até o subtotal das peças. O frete continua separado. Confira o valor mínimo e a validade antes de divulgar o código.</div><p class="form-feedback" role="alert" tabindex="-1" data-editor-feedback></p></div><div class="editor-footer"><span>Confira as condições antes de salvar.</span><div><button class="button button-outline" type="button" data-close-dialog>Cancelar</button><button class="button button-blue" type="submit" data-save-coupon>{{ g.icon('check') }} Salvar cupom</button></div></div></form></dialog>
 {% endblock %}
+{% block data %}<script type="application/json" id="admin-coupons">{{ cupons|json_encode(15)|raw }}</script>{% endblock %}

@@ -1,83 +1,15 @@
-{% extends "base.twig" %}
-
-{% block title %}Pedidos
-{% endblock %}
-
-{% block link %}
-	<link rel="stylesheet" href="/assets/styles.css">
-{% endblock %}
-
+{% extends 'gestao/base.twig' %}
+{% import 'gestao/macros.twig' as g %}
+{% block title %}Pedidos{% endblock %}
 {% block content %}
-	<nav>
-		<a href="/">Início</a>
-		<a href="/produtos">Produtos</a>
-		<a href="/cupons">Cupons</a>
-	</nav>
-
-	<main class="container my-5">
-		<h2>Meus Pedidos</h2>
-
-		{% if pedidos|length > 0 %}
-			{% for pedido in pedidos %}
-				<div class="card mb-4">
-					<div class="card-header bg-dark text-white">
-						Pedido #{{ pedido.id }}
-						–
-						{{ pedido.dataPedido|date("d/m/Y H:i") }}
-					</div>
-					<div class="card-body">
-						<p>
-							<strong>Valor do Pedido:</strong>
-							R$
-							{{ pedido.valorPedido }}</p>
-						<p>
-							<strong>Frete:</strong>
-							R$
-							{{ pedido.valorFrete }}</p>
-						<p>
-							<strong>Status:</strong>
-							{{ pedido.status }}</p>
-						<p>
-							<strong>Cupom Aplicado:</strong>
-							{{ pedido.idCupom ?? 'Nenhum' }}</p>
-
-						<hr>
-						<h5>Itens:</h5>
-
-						{% set itens = pedido.itensPedido ?? [] %}
-						{% if itens|length > 0 %}
-							<table class="table table-bordered table-sm mt-2">
-								<thead class="table-secondary">
-									<tr>
-										<th>Nome Produto</th>
-										<th>ID Item</th>
-										<th>Quantidade</th>
-										<th>Status</th>
-									</tr>
-								</thead>
-								<tbody>
-									{% for item in itens %}
-										<tr>
-											<td>{{ item.infosItem.nomeProduto }}</td>
-											<td>{{ item.infosItem.referencia~" - "~item.infosItem.tamanho~" - "~item.infosItem.cor }}</td>
-											<td>{{ item.quantidade }}</td>
-											<td>
-												<span>{{ item.infosItem.itemEstaAtivo ? "<span class='badge text-bg-success'>Item está ativo</span>" : "<span class='badge text-bg-danger'>Item está desativado</span>"}} </span>
-												<br/>
-												<span>{{ item.infosItem.produtoEstaAtivo ? "<span class='badge text-bg-success'>Produto está ativo</span>" : "<span class='badge text-bg-danger'>Produto está desativado</span>" }}</span>
-											</td>
-										</tr>
-									{% endfor %}
-								</tbody>
-							</table>
-						{% else %}
-							<p class="text-muted">Este pedido não possui itens registrados.</p>
-						{% endif %}
-					</div>
-				</div>
-			{% endfor %}
-		{% else %}
-			<div class="alert alert-warning">Você ainda não possui pedidos registrados.</div>
-		{% endif %}
-	</main>
+<div class="page-heading"><div><h1>Pedidos</h1><p>Cada escolha da loja, em um só lugar.</p></div><a class="button button-outline" href="/colecao" target="_blank" rel="noopener">Ver coleção {{ g.icon('external') }}</a></div>
+<div class="summary-strip three" aria-label="Resumo dos pedidos"><div><strong>{{ resumo.pedidos }}</strong><span>pedidos registrados</span></div><div><strong>{{ resumo.abertos }}</strong><span>pedidos em aberto</span></div><div><strong class="summary-money">R$ {{ resumo.valor|number_format(2, ',', '.') }}</strong><span>valor registrado em pedidos</span></div></div>
+<section class="list-panel" data-managed-list="pedidos" aria-labelledby="orders-heading"><div class="panel-heading"><div><h2 id="orders-heading">Escolhas que chegaram</h2><p>Abra um pedido para conferir peças e entrega.</p></div><span class="panel-counter" data-result-count role="status" aria-live="polite"></span></div><div class="list-tabs" role="group" aria-label="Seleção dos pedidos"><button data-list-tab="todos" aria-pressed="true">Todos os pedidos <span>{{ pedidos|length }}</span></button></div>
+<div class="list-toolbar"><label class="list-search">{{ g.icon('search') }}<span class="sr-only">Buscar pedidos</span><input type="search" data-list-search placeholder="Busque pelo número ou nome do cliente"></label><div class="list-filters"><label><span class="filter-label">Situação do pedido</span><select data-filter-key="situacao" aria-label="Situação do pedido"><option value="">Todas as situações</option>{% for status in situacoes %}<option value="{{ status|e }}">{{ status|capitalize|e }}</option>{% endfor %}</select></label></div></div>
+<div class="main-table-wrap"><table class="admin-table order-table" data-list-table><thead><tr><th scope="col">Pedido</th><th scope="col">Cliente</th><th scope="col">Peças</th><th scope="col">Total</th><th scope="col">Situação</th><th scope="col" class="actions-heading">Detalhes</th></tr></thead>{% for pedido in pedidos %}<tbody data-entry data-group="todos" data-situacao="{{ pedido.status|e }}" data-search="{{ pedido.id }} {{ pedido.cliente|e }}"><tr class="main-row"><th scope="row"><strong class="order-number">#{{ pedido.id }}</strong><span class="cell-note">{{ pedido.dataPedido ? pedido.dataPedido|date('d/m/Y H:i') : 'Data não registrada' }}</span></th><td data-label="Cliente">{{ pedido.cliente ? pedido.cliente|e : 'Não informado' }}</td><td data-label="Peças">{{ pedido.quantidade }} {{ pedido.quantidade == 1 ? 'peça' : 'peças' }}</td><td data-label="Total"><strong class="table-price">R$ {{ pedido.valorPedido|number_format(2, ',', '.') }}</strong></td><td data-label="Situação">{{ g.status(pedido.status) }}</td><td class="row-actions"><button class="button button-small button-outline" data-view-order="{{ pedido.id }}" aria-label="Ver pedido {{ pedido.id }}">Ver pedido {{ g.icon('arrow') }}</button></td></tr></tbody>{% endfor %}</table></div>
+<div class="list-empty" data-list-empty hidden>{{ g.icon('order') }}<h3>{{ pedidos|length ? 'Nenhum pedido nesta seleção.' : 'As próximas escolhas aparecem aqui.' }}</h3><p>{{ pedidos|length ? 'Confira o número, o nome buscado ou a situação selecionada.' : 'Quando um pedido for registrado na loja, você poderá conferir as peças e os dados de entrega aqui.' }}</p><button class="button button-outline" data-clear-list>Limpar filtros</button></div><div class="panel-footnote"><span>O total é o valor registrado no pedido.</span><span>{% if demo %}Pedidos de demonstração não geram cobrança ou envio.{% else %}Registro de pedido não confirma pagamento ou envio.{% endif %}</span></div></section>
 {% endblock %}
+{% block dialogs %}
+<dialog class="editor-dialog order-detail-editor" id="order-editor" aria-labelledby="order-editor-title"><div class="dialog-heading"><div><h2 id="order-editor-title">Pedido</h2><p>Conferência das peças e dos dados de entrega.</p></div><button class="icon-button" data-close-dialog aria-label="Fechar detalhes do pedido">{{ g.icon('close') }}</button></div><div class="editor-content" data-order-content></div><div class="editor-footer"><button class="button button-outline" data-close-dialog>Voltar aos pedidos</button></div></dialog>
+{% endblock %}
+{% block data %}<script type="application/json" id="admin-orders">{{ pedidos|json_encode(15)|raw }}</script>{% endblock %}

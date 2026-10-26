@@ -1,0 +1,42 @@
+{% extends 'loja/base.twig' %}
+{% import 'loja/macros.twig' as ui %}
+{% block title %}{{ produto ? produto.nome : 'Peça não encontrada' }}{% endblock %}
+{% block content %}
+<main id="conteudo" class="wrap product-page">
+    <a class="back-link" href="/colecao">{{ ui.icon('arrow') }} Voltar para a coleção</a>
+    {% if produto %}
+    <div class="product-detail-grid">
+        <div class="product-gallery">
+            <button class="photo-zoom-trigger" data-open-gallery="photo-{{ produto.id }}" aria-label="Ver foto de {{ produto.nome|e }} em destaque" aria-haspopup="dialog">
+                {{ ui.foto(produto, 'detail-photo') }}
+                <span class="photo-zoom-label">{{ ui.icon('zoom') }} Ver a foto de perto</span>
+            </button>
+            <div class="gallery-thumbs" data-gallery-thumbs="{{ produto.id }}" role="group" aria-label="Fotos de {{ produto.nome|e }}"></div>
+            <p class="gallery-caption" data-gallery-caption="{{ produto.id }}" aria-live="polite"></p>
+            <p class="photo-caption-note">Imagens ilustrativas da coleção. A foto acompanha a cor escolhida.</p>
+        </div>
+        <div class="product-detail-copy">
+            <div class="product-title-row"><p class="product-category">{{ produto.categoria|e }}</p><button class="icon-button product-save" data-favorite="{{ produto.id }}" aria-label="Favoritar {{ produto.nome|e }}" aria-pressed="false">{{ ui.icon('heart') }}</button></div>
+            <h1>{{ produto.nome|e }}</h1>
+            <p class="product-intro">{{ produto.descricao|split('. ')|first|e }}{% if '. ' in produto.descricao %}.{% endif %}</p>
+            <strong class="detail-price">R$ {{ produto.preco|number_format(2, ',', '.') }}</strong>
+            <div class="product-selection">{{ ui.opcoes(produto) }}</div>
+            <div class="product-disclosures">
+                <details class="product-disclosure" open><summary>Sobre esta peça {{ ui.icon('plus') }}</summary><p>{{ produto.descricao|e }}</p></details>
+                <details class="product-disclosure"><summary>Entrega e frete {{ ui.icon('plus') }}</summary><p>Consulte o frete na sacola. Em pedidos acima de R$ 200, o frete é grátis. Confira a cor, o tamanho e os dados de entrega antes de confirmar.</p></details>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state"><h1>Esta peça não foi encontrada.</h1><p>Explore a coleção para encontrar uma nova favorita.</p><a class="button button-blue" href="/colecao">Explorar coleção</a></div>
+    {% endif %}
+</main>
+{% if produto %}
+<dialog class="photo-dialog" id="photo-{{ produto.id }}" aria-labelledby="photo-title-{{ produto.id }}" data-zoomed="false">
+    <div class="dialog-heading"><h2 id="photo-title-{{ produto.id }}">{{ produto.nome|e }}</h2><button class="icon-button" data-close-dialog aria-label="Fechar foto">{{ ui.icon('close') }}</button></div>
+    <div class="zoom-frame">{{ ui.foto(produto, 'zoom-photo') }}</div>
+    <div class="photo-dialog-footer"><span>Imagem ilustrativa</span><button type="button" class="button button-outline" data-toggle-photo-zoom aria-pressed="false">{{ ui.icon('zoom') }} Ampliar detalhes</button></div>
+</dialog>
+{% endif %}
+{% endblock %}
+{% block data %}<script type="application/json" id="catalog-data">{{ (produto ? [produto] : [])|json_encode(15)|raw }}</script>{% endblock %}

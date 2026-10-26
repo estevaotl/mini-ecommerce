@@ -1,0 +1,37 @@
+{% import 'gestao/macros.twig' as g %}
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#294cc8"><title>{% block title %}Gestão{% endblock %} | Nuvix</title><link rel="icon" href="/assets/images/marca.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/gestao.css"><script src="/js/gestao/gestao.js" defer></script></head>
+<body data-admin-page="{{ pagina }}">
+<a href="#gestao-conteudo" class="skip-link">Ir para o conteúdo</a>
+<svg class="icon-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
+<symbol id="g-flower" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M5.5 5.5l13 13M5.5 18.5l13-13"/></symbol>
+<symbol id="g-box" viewBox="0 0 24 24"><path d="m3 7 9-4 9 4v10l-9 4-9-4V7Zm0 0 9 4 9-4M12 11v10M7 5l10 4"/></symbol>
+<symbol id="g-order" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Zm3 5h6m-6 4h6"/></symbol>
+<symbol id="g-ticket" viewBox="0 0 24 24"><path d="M3 7h18v4a2 2 0 0 0 0 4v4H3v-4a2 2 0 0 0 0-4V7Zm12 0v2m0 3v2m0 3v2"/></symbol>
+<symbol id="g-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+<symbol id="g-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+<symbol id="g-external" viewBox="0 0 24 24"><path d="M14 4h6v6m0-6L10 14M10 4H4v16h16v-6"/></symbol>
+<symbol id="g-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+<symbol id="g-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+<symbol id="g-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="g-edit" viewBox="0 0 24 24"><path d="m15 4 5 5-10 10-6 1 1-6L15 4Zm-2 2 5 5"/></symbol>
+<symbol id="g-archive" viewBox="0 0 24 24"><path d="M3 4h18v4H3V4Zm2 4v12h14V8M9 12h6"/></symbol>
+<symbol id="g-restore" viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 1 9M4 4v6h6"/></symbol>
+<symbol id="g-trash" viewBox="0 0 24 24"><path d="M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7"/></symbol>
+<symbol id="g-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+<symbol id="g-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+</defs></svg>
+<aside class="admin-sidebar">
+<a class="admin-brand" href="/produtos" aria-label="Nuvix, gestão de produtos">nuvix {{ g.icon('flower') }}</a>
+<p class="sidebar-label">Seu espaço de gestão</p>
+<nav class="sidebar-nav" aria-label="Gestão"><a href="/produtos" {% if pagina == 'produtos' %}aria-current="page"{% endif %}>{{ g.icon('box') }} Produtos</a><a href="/pedidos" {% if pagina == 'pedidos' %}aria-current="page"{% endif %}>{{ g.icon('order') }} Pedidos</a><a href="/cupons" {% if pagina == 'cupons' %}aria-current="page"{% endif %}>{{ g.icon('ticket') }} Cupons</a></nav>
+<div class="sidebar-bottom"><div class="sidebar-note">{{ g.icon('flower') }}<p>Mais espaço<br>para suas ideias.</p></div><a href="/colecao" target="_blank" rel="noopener">Abrir a loja {{ g.icon('external') }}</a></div>
+</aside>
+<div class="admin-workspace"><header class="admin-topbar"><span>Gestão da loja</span><div>{% if demo %}<span class="demo-indicator"><i aria-hidden="true"></i> Demonstração</span>{% endif %}<a href="/" target="_blank" rel="noopener">Ver loja {{ g.icon('external') }}</a></div></header>
+<main id="gestao-conteudo" class="admin-main">
+{% if feedback %}<div class="success-banner" role="status">{{ g.icon('check') }}<p>{{ feedback|e }}</p><button class="icon-button" data-dismiss-banner aria-label="Fechar mensagem">{{ g.icon('close') }}</button></div>{% endif %}
+{% block content %}{% endblock %}
+</main><footer class="admin-footer"><span>Nuvix · Gestão da loja</span><a href="/ajuda" target="_blank" rel="noopener">Ajuda sobre a compra {{ g.icon('external') }}</a></footer></div>
+<dialog class="confirm-dialog" id="admin-confirm" aria-labelledby="confirm-title"><div class="dialog-heading"><h2 id="confirm-title">Conferir ação</h2><button class="icon-button" data-close-dialog aria-label="Fechar confirmação">{{ g.icon('close') }}</button></div><p data-confirm-copy></p><p class="form-feedback" data-confirm-feedback role="alert" tabindex="-1"></p><div class="confirm-actions"><button class="button button-outline" data-close-dialog>Cancelar</button><button class="button button-ink" data-confirm-submit>Confirmar</button></div></dialog>
+{% block dialogs %}{% endblock %}
+{% block data %}{% endblock %}
+</body></html>

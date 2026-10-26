@@ -1,40 +1,105 @@
-{% extends "base.twig" %}
-
-{% block title %}Pagina Inicial
-{% endblock %}
-
-{% block link %}
-	<link rel="stylesheet" href="/assets/styles.css">
-{% endblock %}
-
-
+{% extends 'loja/base.twig' %}
+{% import 'loja/macros.twig' as ui %}
+{% block title %}{{ colecao ? 'Nossa coleção' : 'Vista suas próprias ideias' }}{% endblock %}
 {% block content %}
-	<nav>
-		<a href="/">Início</a>
-		<a href="/produtos">Produtos</a>
-		<a href="/cupons">Cupons</a>
-		<a href="/pedidos">Pedidos</a>
-
-		{% if pedido is defined and pedido.itensPedido is defined and pedido.itensPedido|length > 0 %}
-			{% set totalItens = 0 %}
-			{% for item in pedido.itensPedido %}
-				{% set totalItens = totalItens + 1 %}
-			{% endfor %}
-			<a href="/carrinho">
-				Carrinho
-				<span class="top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ totalItens }}</span>
-			</a>
-		{% endif %}
-	</nav>
-
-	<div class="container flex-banner">
-		<div class="text-section">
-			<h1>Bem-vindo ao ERP da Montink</h1>
-			<p>Selecione a opção desejada no menu acima.</p>
-		</div>
-
-		<div class="image-section">
-			<img src="/assets/images/image_montink_index.png" alt="Imagem de destaque do Nuvix">
-		</div>
-	</div>
+<main id="conteudo">
+{% if not colecao %}
+<section class="hero wrap" aria-labelledby="hero-title">
+<div class="hero-copy">
+<span class="collection-tag">
+<span>
+</span> Coleção Forma de ser</span>
+<h1 id="hero-title">Vista suas<br>próprias<br>ideias.</h1>
+<p>Peças autorais para quem encontra<br class="desktop-break"> seu próprio jeito de estar no mundo.</p>
+<a class="button button-ink" href="/colecao">Encontre a sua peça {{ ui.icon('up-right') }}</a>
+<div class="hero-footnote">{{ ui.icon('flower', 'little-sun') }} O básico pode ser extraordinário.</div>
+</div>
+<div class="hero-media">
+<img src="/assets/images/campanha.webp" alt="Duas pessoas com camiseta amarela e moletom lilás da proposta de coleção" width="1254" height="1254" fetchpriority="high">
+<span class="photo-caption">Um jeito novo de ser você.</span>
+</div>
+</section>
+<div class="brand-strip wrap">
+<span>{{ ui.icon('shirt') }} Peças com personalidade</span>
+<span class="strip-word">Seu jeito fica bem em você.</span>
+<span>{{ ui.icon('truck') }} Frete grátis acima de R$ 200</span>
+</div>
+{% endif %}
+<section class="catalog-section wrap" id="colecao" aria-labelledby="catalog-title">
+<div class="section-heading">
+<div>
+<h{{ colecao ? '1' : '2' }} id="catalog-title">{{ colecao ? 'Encontre o seu jeito.' : 'Seu próximo favorito.' }}</h{{ colecao ? '1' : '2' }}>
+<p>{{ colecao ? 'Camisetas, moletons e acessórios para vestir suas ideias.' : 'Uma coleção feita de cores, formas e possibilidades.' }}</p>
+</div>{% if not colecao %}<a class="text-link" href="/colecao">Ver coleção completa {{ ui.icon('arrow') }}</a>{% endif %}</div>
+<div class="catalog-toolbar">
+<div class="category-filters" role="group" aria-label="Filtrar por categoria">
+<button class="filter-button is-active" data-category="Todas" aria-pressed="true">Todas as peças</button>{% for categoria in categorias %}<button class="filter-button" data-category="{{ categoria }}" aria-pressed="false">{{ categoria }}</button>{% endfor %}</div>
+<label class="sort-control">Ordenar por <select data-sort aria-label="Ordenar peças">
+<option value="default">Seleção Nuvix</option>
+<option value="price-asc">Menor preço</option>
+<option value="price-desc">Maior preço</option>
+<option value="name">Nome da peça</option>
+</select>
+</label>
+</div>
+<p class="search-summary" data-search-summary hidden>
+</p>
+<div class="product-grid" data-product-grid>{% for produto in produtos %}<article class="product-card" data-card-id="{{ produto.id }}" data-category="{{ produto.categoria }}" data-name="{{ produto.nome }}" data-price="{{ produto.preco }}">
+<div class="product-visual">
+<a href="/peca/{{ produto.id }}" data-open-product="{{ produto.id }}" aria-label="Ver {{ produto.nome }}">{{ ui.foto(produto) }}</a>
+<button class="favorite-button" data-favorite="{{ produto.id }}" aria-label="Favoritar {{ produto.nome }}" aria-pressed="false">{{ ui.icon('heart') }}</button>{% if not produto.disponivel %}<span class="product-badge">Esgotado</span>{% endif %}<a class="quick-view" href="/peca/{{ produto.id }}" data-open-product="{{ produto.id }}">Ver opções {{ ui.icon('plus') }}</a>
+</div>
+<div class="product-info">
+<div>
+<a class="product-name" href="/peca/{{ produto.id }}" data-open-product="{{ produto.id }}">{{ produto.nome }}</a>
+<p>{{ produto.categoria }} <span>{{ produto.cores|length }} {{ produto.cores|length == 1 ? 'cor' : 'cores' }}</span>
+</p>
+</div>
+<strong>R$ {{ produto.preco|number_format(2, ',', '.') }}</strong>
+</div>
+<div class="card-colors" role="group" aria-label="Cores de {{ produto.nome|e }}">
+{% for cor in produto.cores_vitrine %}
+<button type="button" class="card-swatch" style="--swatch: {{ cor.hex }}" data-open-product="{{ produto.id }}" data-product-color="{{ cor.nome|e }}" aria-haspopup="dialog" aria-label="Escolher {{ produto.nome|e }} na cor {{ cor.nome|e }}" title="{{ cor.nome|e }}{{ not cor.disponivel ? ' (esgotada)' : '' }}" {% if not cor.disponivel %}disabled{% endif %}><span></span></button>
+{% endfor %}
+<span class="card-colors-hint">Escolha uma cor</span>
+</div>
+</article>{% else %}<div class="empty-state">
+<h3>A próxima coleção está a caminho.</h3>
+<p>Cadastre as peças na área de gestão para começar a sua vitrine.</p>
+<a class="button button-blue" href="/produtos">Cadastrar peças</a>
+</div>{% endfor %}</div>
+<div class="empty-state" data-filter-empty hidden>
+<h3>Nenhuma peça por aqui ainda.</h3>
+<p>Tente outra busca ou explore toda a coleção.</p>
+<button class="button button-blue" data-clear-filters>Ver todas as peças</button>
+</div>
+<p class="result-count" data-result-count>{{ produtos|length }} peças para chamar de suas.</p>
+</section>
+{% if not colecao %}<section class="brand-story wrap" id="nossa-ideia" aria-labelledby="story-title">
+<div class="story-art" aria-hidden="true">
+<div class="story-orbit orbit-one">
+</div>
+<div class="story-orbit orbit-two">
+</div>{{ ui.icon('flower', 'story-flower') }}<span class="story-art-word">ser<br>você.</span>
+</div>
+<div class="story-copy">
+<h2 id="story-title">A melhor tendência<br>é ter o seu jeito.</h2>
+<p>A Nuvix nasceu como uma ideia simples: fazer do vestir um espaço de expressão. Cores que conversam, formas que surpreendem e peças que acompanham o seu dia.</p>
+<p>Escolha o que combina com você. O resto é possibilidade.</p>
+<a class="text-link" href="/colecao">Conheça a coleção {{ ui.icon('arrow') }}</a>
+</div>
+</section>{% endif %}
+</main>
+{% for produto in produtos %}<dialog class="product-dialog" id="product-{{ produto.id }}" aria-labelledby="product-title-{{ produto.id }}">
+<button class="icon-button dialog-close" data-close-dialog aria-label="Fechar detalhes da peça">{{ ui.icon('close') }}</button>
+<div class="product-detail-grid">{{ ui.foto(produto, 'detail-photo') }}<div class="product-detail-copy">
+<p class="product-category">{{ produto.categoria }}</p>
+<h2 id="product-title-{{ produto.id }}">{{ produto.nome }}</h2>
+<strong class="detail-price">R$ {{ produto.preco|number_format(2, ',', '.') }}</strong>
+<p class="product-description">{{ produto.descricao }}</p>{{ ui.opcoes(produto) }}<p class="detail-note">{{ ui.icon('truck') }} Frete calculado na sacola.</p><p class="photo-caption-note">Imagem ilustrativa. A foto acompanha a cor escolhida.</p>
+<a class="subtle-link" href="/peca/{{ produto.id }}">Abrir página desta peça</a>
+</div>
+</div>
+</dialog>{% endfor %}
 {% endblock %}
+{% block data %}<script type="application/json" id="catalog-data">{{ produtos|json_encode(15)|raw }}</script>{% endblock %}

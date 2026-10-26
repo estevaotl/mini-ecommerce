@@ -22,3 +22,7 @@ rad.json
 TestResults.xml
 
 vendor/
+api/config/.env
+api/database/*.sqlite
+api/database/*.sqlite-*
+api/database/sessions/

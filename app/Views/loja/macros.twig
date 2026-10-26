@@ -1,0 +1,36 @@
+{% macro icon(nome, classe = '') %}<svg class="icon {{ classe }}" aria-hidden="true" viewBox="0 0 24 24">
+<use href="#i-{{ nome }}"/>
+</svg>{% endmacro %}
+{% macro foto(produto, classe = '') %}
+<div class="product-photo {{ classe }} {% if produto.imagem and 'catalogo.webp' in produto.imagem %}atlas atlas-{{ produto.imagem_posicao }}{% endif %}" data-product-image="{{ produto.id }}" {% if produto.imagem %}style="background-image: url('{{ produto.imagem }}')"{% endif %} role="img" aria-label="{{ produto.nome }}{% if produto.imagem %}, imagem ilustrativa{% endif %}">
+{% if not produto.imagem %}<svg class="photo-placeholder" aria-hidden="true" viewBox="0 0 24 24">
+<use href="#i-shirt"/>
+</svg>{% endif %}
+</div>
+{% endmacro %}
+{% macro opcoes(produto) %}
+<form class="product-options" data-product-form="{{ produto.id }}">
+    <fieldset>
+<legend>Cor <span data-color-name>
+</span>
+</legend>
+<div class="color-options" data-colors>
+</div>
+</fieldset>
+    <fieldset>
+<legend>Tamanho <a href="#" data-size-guide>Guia de medidas</a>
+</legend>
+<div class="size-options" data-sizes>
+</div>
+</fieldset>
+    <p class="availability" data-availability>
+</p>
+    <div class="add-row">
+<label class="sr-only" for="qty-{{ produto.id }}">Quantidade</label>
+<input id="qty-{{ produto.id }}" name="quantidade" type="number" value="1" min="1" max="99" aria-label="Quantidade">
+<button class="button button-blue" type="submit" data-add-button>Adicionar à sacola {{ _self.icon('bag') }}</button>
+</div>
+    <p class="form-feedback" role="status" data-product-feedback>
+</p>
+</form>
+{% endmacro %}

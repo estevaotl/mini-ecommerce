@@ -19,7 +19,7 @@ class Pedido {
 
     public function criar(array $dados): int {
         $pdo = Database::getInstance();
-        $sql = "INSERT INTO " . self::NOME_TABELA . " (valorPedido, valorFrete, dataPedido, status, idCupom) VALUES (:valorPedido, :valorFrete, NOW(), :status, :idCupom)";
+        $sql = "INSERT INTO " . self::NOME_TABELA . " (valorPedido, valorFrete, dataPedido, status, idCupom) VALUES (:valorPedido, :valorFrete, CURRENT_TIMESTAMP, :status, :idCupom)";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
             ':valorPedido' => $dados["valorPedido"],
